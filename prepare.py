@@ -70,71 +70,62 @@ def Func_ProteinRotation(R_InterfaceList, L_InterfaceList, axis, theta):
 
 
 def form_atom_list(PDBLines):
-	rlist = []
-	llist = []
-	rcount = 0
-	for line in PDBLines:
-		if line[0:4] == 'ATOM' and (line[21] == 'P' or line[21] == 'A'):
-			rcount += 1
-	atomid = 0
-	count = 1
-	goon = False
-	residue_type = ''
-	pre_residue_type = residue_type
-	tmp_list = []
-	pre_residue_id = 0
-	pre_chain_id = ''
-	for line in PDBLines:
-		if len(line) == 0:
-			continue
-		if (line[0:4] == 'ATOM'):
-			dat_in = line[0:80].split()
-			chain_id = line[21]
-			residue_id = int(line[22:26])
-			if (atomid > int(dat_in[1])):
-				if count <= rcount + 20 and count >= rcount - 20:
-					goon = True
-			if residue_id < pre_residue_id:
-				if count <= rcount + 20 and count >= rcount - 20:
-					goon = True
-			if pre_chain_id != chain_id:
-				if count <= rcount + 20 and count >= rcount - 20:
-					goon = True
-			#if chain_id != 'A':
-				#goon = True
-			x = float(line[30:38])
-			y = float(line[38:46])
-			z = float(line[46:54])
-			residue_type = line[17:26]
-			# First try CA distance of contact map
-			atom_name = line[13:16].split()[0]
-			residue_name = line[17:20].strip()
-			chain_residue_id = chain_id + str(residue_id)
-			atom_type = [atom_name, residue_name, chain_residue_id]
-			if (goon):  # ligand list
-				if pre_residue_type == residue_type:
-					tmp_list.append([x, y, z, atom_type])
-				else:
-					if tmp_list:  # avoid empty list
-						llist.append(tmp_list)
-					tmp_list = []
-					tmp_list.append([x, y, z, atom_type])
-			else:  # receptor list
-				if pre_residue_type == residue_type:
-					tmp_list.append([x, y, z, atom_type])
-				else:
-					if tmp_list:  # avoid empty list
-						rlist.append(tmp_list)
-					tmp_list = []
-					tmp_list.append([x, y, z, atom_type])
-			atomid = int(dat_in[1])
-			chainid = line[21]
-			count = count + 1
-			pre_residue_type = residue_type
-			pre_residue_id = residue_id
-			pre_chain_id = chain_id
-	print('in total, we have %d residues in receptor, %d residues in ligand' % (len(rlist), len(llist)))
-	return rlist, llist
+    rlist = []
+    llist = []
+    chain_ligand = ['B']  # 리간드 체인 ID 리스트
+    chain_receptor = ['A']  # 리셉터 체인 ID 리스트
+
+    tmp_list = []
+    pre_residue_type = ''
+    pre_residue_id = 0
+    pre_chain_id = ''
+
+    for line in PDBLines:
+        if len(line) == 0:
+            continue
+        if line[0:4] == 'ATOM':
+            x = float(line[30:38])
+            y = float(line[38:46])
+            z = float(line[46:54])
+            chain_id = line[21]
+            residue_id = int(line[22:26])
+            residue_type = line[17:26]
+            atom_name = line[13:16].split()[0]
+            residue_name = line[17:20].strip()
+            chain_residue_id = chain_id + str(residue_id)
+            atom_type = [atom_name, residue_name, chain_residue_id]
+
+            # 리간드 또는 리셉터에 추가
+            if chain_id in chain_ligand:  # 리간드 처리
+                if pre_residue_type == residue_type and pre_chain_id == chain_id:
+                    tmp_list.append([x, y, z, atom_type])
+                else:
+                    if tmp_list:
+                        llist.append(tmp_list)
+                    tmp_list = [[x, y, z, atom_type]]
+            elif chain_id in chain_receptor:  # 리셉터 처리
+                if pre_residue_type == residue_type and pre_chain_id == chain_id:
+                    tmp_list.append([x, y, z, atom_type])
+                else:
+                    if tmp_list:
+                        rlist.append(tmp_list)
+                    tmp_list = [[x, y, z, atom_type]]
+
+            # 이전 상태 업데이트
+            pre_residue_type = residue_type
+            pre_residue_id = residue_id
+            pre_chain_id = chain_id
+
+    # 마지막 남은 tmp_list 처리
+    if tmp_list:
+        if pre_chain_id in chain_ligand:
+            llist.append(tmp_list)
+        elif pre_chain_id in chain_receptor:
+            rlist.append(tmp_list)
+
+    print('in total, we have %d residues in receptor, %d residues in ligand' % (len(rlist), len(llist)))
+    return rlist, llist
+
 
 
 def form_interface(rlist, llist):
