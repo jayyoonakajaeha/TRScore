@@ -1,0 +1,1 @@
+2025.02.07  src의 prepare.py가 상당히 잘못된 방식으로 receptor와 ligand를 구별하고 있기 때문에 코드를 임의로 receptor는 A, ligand는 B의 chain id로 설정하도록 수정하였고 src 바깥으로도 하나 더 복사해줌(경로 문제가 생겨서 그랬던 것으로 기억)
