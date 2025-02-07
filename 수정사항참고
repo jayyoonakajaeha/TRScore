@@ -1,1 +1,2 @@
 2025.02.07  src의 prepare.py가 상당히 잘못된 방식으로 receptor와 ligand를 구별하고 있기 때문에 코드를 임의로 receptor는 A, ligand는 B의 chain id로 설정하도록 수정하였고 src 바깥으로도 하나 더 복사해줌(경로 문제가 생겨서 그랬던 것으로 기억)
+2025.02.07  pip install torch==1.8.0+cu101 torchvision==0.9.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html 로 가상환경 상 dependencies 다시 설치해줌. torch.cuda.is_available() 값이 False면 main.py 실행시 오류.
